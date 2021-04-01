@@ -1,22 +1,25 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+from Blueprint.BaseBlueprintItem import BaseBlueprintItem, BaseBlueprintItemDict
 from Blueprint.DeconstructionPlanner import DeconstructionPlanner
 from Blueprint.UpgradePlanner import UpgradePlanner
 
-import Blueprint.BlueprintWrapper
-import Blueprint.PlainBlueprint
-import Blueprint.BlueprintBook
+if TYPE_CHECKING:
+    from Blueprint.Blueprint import Blueprint, BlueprintDict
+    from Blueprint.BlueprintBook import BlueprintBook, BlueprintBookDict
 
 
-class BookItemDict(Blueprint.BlueprintWrapper.BlueprintWrapperDict):
+class BookItemDict(BaseBlueprintItemDict):
     index: int
 
 
-class BookItem(Blueprint.BlueprintWrapper.BlueprintWrapper):
+class BookItem(BaseBlueprintItem):
     def __init__(self,
                  index: int,
-                 blueprint: Blueprint.PlainBlueprint.BlueprintDict = None,
-                 blueprint_book: Blueprint.BlueprintBook.BlueprintBookDict = None,
+                 blueprint: BlueprintDict = None,
+                 blueprint_book: BlueprintBookDict = None,
                  deconstruction_planner: DeconstructionPlanner = None,
                  upgrade_planner: UpgradePlanner = None
                  ):

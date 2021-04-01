@@ -1,30 +1,12 @@
-import TestPackage
+from Blueprint.BlueprintWrapper import BlueprintWrapper
+from data import iter_stored_blueprints
 
-data: dict = \
-    {
-        "b":
-            {
-                "c":
-                    {
-                        "bp":
-                            {
-                                "p": 0
-                            },
-                    },
-            },
-    }
+iterator = iter_stored_blueprints()
 
-TestPackage.Wrapper(**data)
-print(1)
+for i, (k, bp) in enumerate(iterator):
+    if i > 50:
+        break
 
+    wrapper = BlueprintWrapper(**bp)
+    print(k, wrapper)
 
-# from Blueprint.BlueprintWrapper import BlueprintWrapper
-# from data import iter_stored_blueprints
-#
-# iterator = iter_stored_blueprints()
-#
-# for k, bp in iterator:
-#     print(k, bp)
-#     wrapper = BlueprintWrapper(**bp)
-#     print(wrapper)
-#     break

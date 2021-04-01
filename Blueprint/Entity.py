@@ -20,7 +20,7 @@ class EntityDict(TypedDict):
     direction: int
     orientation: float
     connections: ConnectionDict
-    control_behaviour: object
+    control_behavior: object
     items: object
     recipe: str
     bar: int
@@ -53,7 +53,7 @@ class Entity:
                  direction: int = None,
                  orientation: float = None,
                  connections: ConnectionDict = None,
-                 control_behaviour: object = None,
+                 control_behavior: object = None,
                  items: object = None,
                  recipe: str = None,
                  bar: int = None,
@@ -76,6 +76,7 @@ class Entity:
                  variation: object = None,
                  color: ColorDict = None,
                  station: str = None,
+                 #*args, **kwargs
                  ):
         self.entity_number: int = entity_number
         self.name: str = name
@@ -83,7 +84,7 @@ class Entity:
         self.direction: int = direction
         self.orientation: float = orientation
         self.connections: Connection = None if connections is None else Connection(**connections)
-        self.control_behaviour: object = control_behaviour
+        self.control_behavior: object = control_behavior
         self.items: object = items
         self.recipe: str = recipe
         self.bar: int = bar

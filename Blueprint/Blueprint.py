@@ -24,7 +24,7 @@ class BlueprintDict(TypedDict):
     schedules: List[ScheduleDict]
 
 
-class PlainBlueprint:
+class Blueprint:
     def __init__(self,
                  entities: List[EntityDict] = (),
                  item: str = None,
