@@ -3,6 +3,7 @@ from os import path
 import json
 import pyrebase
 import requests
+from typing import Generator, Tuple
 from pyrebase.pyrebase import Database
 
 from blueprintString import decode_blueprint_string
@@ -86,13 +87,14 @@ def store_blueprints(factorioprints_data: dict, max_blueprint_size=1000000):
             print(f"Failed to store blueprint for key {k}.")
 
 
-def iter_stored_blueprints():
+def iter_stored_blueprints() -> Generator[Tuple[str, dict], None, None]:
     for bp_path in glob.glob(path.join(Config.BlueprintsDir, "*.json")):
         base = path.basename(bp_path)
-        key = path.splitext(base)[0]
+        key: str = path.splitext(base)[0]
 
         with open(bp_path) as f:
-            yield key, json.load(f)
+            data: dict = json.load(f)
+            yield key, data
 
 
 if __name__ == "__main__":
