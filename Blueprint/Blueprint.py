@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import numpy as np
+from matplotlib.path import Path
+
 from cachedProperty import cached_property
 from typing import List
 
@@ -46,21 +49,45 @@ class Blueprint:
         self.label_color: Color = None if label_color is None else Color(**label_color)
 
     def __repr__(self):
-        bb = self.boundingBox
-        x = bb[1].x - bb[0].x + 1
-        y = bb[1].y - bb[0].y + 1
+        x, y = self.get_dimensions()
         return f"Blueprint of shape ({x} x {y})"
 
     @cached_property
-    def boundingBox(self):
-        minX, maxX = float('inf'), float('-inf')
-        minY, maxY = float('inf'), float('-inf')
+    def bounding_box(self):
+        min_x, max_x = float('inf'), float('-inf')
+        min_y, max_y = float('inf'), float('-inf')
 
         for e in self.entities:
-            if e.position.x < minX:
-                minX = e.position.x
-            if e.position.x > maxX:
-                maxX = e.position.x
+            e_min_x, e_min_y = np.min(e.bounding_box, axis=0)
+            e_max_x, e_max_y = np.max(e.bounding_box, axis=0)
+
+            if e_min_x < min_x:
+                min_x = e_min_x
+            if e_max_x > max_x:
+                max_x = e_max_x
+
+            if e_min_y < min_y:
+                min_y = e_min_y
+            if e_max_y > max_y:
+                max_y = e_max_y
+
+        return Position(min_x, min_y), Position(max_x, max_y)
+
+    def get_dimensions(self):
+        bb = self.bounding_box
+        x = bb[1].x - bb[0].x
+        y = bb[1].y - bb[0].y
+        return x, y
+
+    def get_entity_at(self, x, y):
+        if not self.bounding_box[0].x <= x <= self.bounding_box[1].x or \
+               self.bounding_box[0].y <= y <= self.bounding_box[1].y:
+            return None
+
+        for e in self.entities:
+            bb = e.bounding_box
+
+        return None
 
             if e.position.y < minY:
                 minY = e.position.y

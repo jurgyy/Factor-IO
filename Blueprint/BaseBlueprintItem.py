@@ -26,7 +26,7 @@ class BaseBlueprintItem:
                  *args, **kwargs
                  ):
         # Delayed import to prevent import errors
-        global BlueprintBookDict, BlueprintBook, BlueprintDict, PlainBlueprint
+        global BlueprintBookDict, BlueprintBook, BlueprintDict, Blueprint
         from Blueprint.BlueprintBook import BlueprintBookDict, BlueprintBook
         from Blueprint.Blueprint import BlueprintDict, Blueprint
 
@@ -44,7 +44,7 @@ class BaseBlueprintItem:
             self.item = Blueprint(**blueprint)
 
     def __iter__(self):
-        if self.type is PlainBlueprint:
+        if self.type is Blueprint:
             yield self.item
             return
         elif self.type is BlueprintBook:
@@ -69,6 +69,6 @@ class BaseBlueprintItem:
             for bp in self.item:
                 for e in bp.entities:
                     yield e
-        if self.type is PlainBlueprint:
+        if self.type is Blueprint:
             for e in self.item.entities:
                 yield e

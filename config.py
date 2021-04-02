@@ -11,3 +11,5 @@ class Config:
     TagsUrl: str = "https://raw.githubusercontent.com/FactorioBlueprints/factorio-prints/master/data/tags.json"
     FactorioPrintsModTag: str = "mods"
     FactorioPrintsTagKey = "tags"
+
+    EntitySizeJsonFName: str = path.join(DataDir, "size.json")

@@ -1,7 +1,11 @@
+import json
 from typing import List
+from math import cos, sin
+import numpy as np
 
 from typing_extensions import TypedDict
 
+import utils
 from Blueprint.Color import Color, ColorDict
 from Blueprint.Connection import Connection, ConnectionDict
 from Blueprint.InfinitySettings import InfinitySettings, InfinitySettingsDict
@@ -11,6 +15,8 @@ from Blueprint.LogisticFilter import LogisticFilter, LogisticFilterDict
 from Blueprint.Position import Position, PositionDict
 from Blueprint.SpeakerAlertParameter import SpeakerAlertParameter, SpeakerAlertParameterDict
 from Blueprint.SpeakerParameter import SpeakerParameter, SpeakerParameterDict
+from cachedProperty import cached_property
+from config import Config
 
 
 class EntityDict(TypedDict):
@@ -46,6 +52,16 @@ class EntityDict(TypedDict):
 
 
 class Entity:
+    _entity_size_dict: dict = None
+
+    @staticmethod
+    def get_entity_size_dict() -> dict:
+        if Entity._entity_size_dict is None:
+            with open(Config.EntitySizeJsonFName) as f:
+                Entity._entity_size_dict = json.load(f)
+
+        return Entity._entity_size_dict
+
     def __init__(self,
                  entity_number: int,
                  name: str,
@@ -76,12 +92,11 @@ class Entity:
                  variation: object = None,
                  color: ColorDict = None,
                  station: str = None,
-                 #*args, **kwargs
                  ):
         self.entity_number: int = entity_number
         self.name: str = name
         self.position: Position = Position(**position)
-        self.direction: int = direction
+        self.direction: int = 0 if direction is None else direction
         self.orientation: float = orientation
         self.connections: Connection = None if connections is None else Connection(**connections)
         self.control_behavior: object = control_behavior
@@ -108,5 +123,40 @@ class Entity:
         self.color: Color = None if color is None else Color(**color)
         self.station: str = station
 
+        (x, y), (w, h) = Entity.get_entity_size_dict()[self.name]
+        self.half_width = w
+        self.half_height = h
+
     def __repr__(self):
-        return f"[Entity {self.name}@{self.position}]"
+        return f"[Entity {self.name}@{self.position} D={self.direction}]"
+
+    @cached_property
+    def bounding_box(self) -> np.ndarray:
+        if self.direction % 2 == 0:
+            # 90 degree turns
+            x_dist, y_dist = self.half_width, self.half_height
+
+            if self.direction % 4 != 0:
+                x_dist, y_dist = y_dist, x_dist
+
+            min_x = round(self.position.x - x_dist)
+            max_x = round(self.position.x + x_dist)
+            min_y = round(self.position.y - y_dist)
+            max_y = round(self.position.y + y_dist)
+
+            corners = np.array([[min_x, min_x, max_x, max_x], [min_y, max_y, min_y, max_y]])
+
+            return corners.T
+
+        else:
+            # 45 degree turns
+            raise NotImplementedError("45 degree turns not supported yet")
+            # degrees = self.direction * 45
+            # theta = np.deg2rad(360 - degrees)
+            # return utils.math.rotate(np.array([self.position.x, self.position.y]), corners, theta).T
+
+
+
+
+
+
