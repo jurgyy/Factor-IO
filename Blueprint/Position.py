@@ -2,8 +2,8 @@ from typing_extensions import TypedDict
 
 
 class PositionDict(TypedDict):
-    x: int
-    y: int
+    x: float
+    y: float
 
 
 class Position:
@@ -13,3 +13,6 @@ class Position:
 
     def __repr__(self):
         return f"({self.x}, {self.y})"
+
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y
