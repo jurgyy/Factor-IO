@@ -2,7 +2,7 @@ from os import path
 
 
 class Config:
-    DataDir: str = path.join(".", "data")
+    DataDir: str = path.join(path.dirname(__file__), "data")
     RawDir: str = path.join(DataDir, "raw")
     RawBlueprintDataFName: str = path.join(RawDir, "rawdata.json")
     RawSummariesFName: str = path.join(RawDir, "rawsummaries.json")
