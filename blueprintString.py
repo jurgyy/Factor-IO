@@ -16,7 +16,7 @@ def decode_blueprint_string(blueprint_string: str) -> dict:
     return json.loads(decoded_string)
 
 
-def encode_blueprint_string(blueprint_dict: dict) -> str:
+def encode_blueprint_dict(blueprint_dict: dict) -> str:
     js = json.dumps(blueprint_dict)
     encoded_bytes = zlib.compress(bytearray(js, encoding="utf-8"), 9)
     encoded_string: str = base64.b64encode(encoded_bytes).decode("utf-8", "ignore")
@@ -29,7 +29,7 @@ def _main():
         "LhypH5Hqq3Ao7L79iGDd4ppB9qyOZ2rU/3UNEVd5fwJp9xrmA=="
 
     d = decode_blueprint_string(s)
-    r = encode_blueprint_string(d)
+    r = encode_blueprint_dict(d)
     rd = decode_blueprint_string(r)
 
     print(s)
