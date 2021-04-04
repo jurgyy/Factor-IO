@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 
 from Blueprint.Blueprint import Blueprint, BlueprintDict
@@ -45,6 +47,10 @@ class Grid:
 
             lines.append("".join(line))
         return "\n".join(lines)
+
+    def __getitem__(self, item: Tuple[int, int]):
+        x, y = item
+        return self.grid[y][x]
 
 
 def _main():
