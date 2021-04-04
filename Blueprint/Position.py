@@ -16,3 +16,7 @@ class Position:
 
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
+
+    def __iter__(self):
+        yield self.x
+        yield self.y
