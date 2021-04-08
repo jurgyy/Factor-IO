@@ -1,5 +1,5 @@
 import json
-from typing import List, Tuple
+from typing import List, Tuple, Type
 from math import cos, sin
 import numpy as np
 
@@ -15,6 +15,7 @@ from Blueprint.LogisticFilter import LogisticFilter, LogisticFilterDict
 from Blueprint.Position import Position, PositionDict
 from Blueprint.SpeakerAlertParameter import SpeakerAlertParameter, SpeakerAlertParameterDict
 from Blueprint.SpeakerParameter import SpeakerParameter, SpeakerParameterDict
+from Blueprint.FactorioBlueprintObject import FactorioBlueprintObject
 from cachedProperty import cached_property
 from config import Config
 
@@ -51,7 +52,8 @@ class EntityDict(TypedDict):
     station: str
 
 
-class Entity:
+class Entity(FactorioBlueprintObject):
+    dict_type: Type[TypedDict] = EntityDict
     _entity_size_dict: dict = None
 
     @staticmethod
@@ -123,38 +125,62 @@ class Entity:
         self.color: Color = None if color is None else Color(**color)
         self.station: str = station
 
-        (l, d), (r, u) = Entity.get_entity_size_dict()[self.name]
-        self.half_width: Tuple[float, float] = (l, r)
-        self.half_height: Tuple[float, float] = (d, u)
+        if self.direction > 7:
+            raise Exception("Invalid direction")
+
+        w, h = self._orientate_half_dimensions(Entity.get_entity_size_dict()[self.name])
+        self.half_width: Tuple[float, float] = w
+        self.half_height: Tuple[float, float] = h
         self._correct_position()
 
     def __repr__(self):
         return f"[Entity {self.name}@{self.position} D={self.direction}]"
 
+    def _orientate_half_dimensions(self, dimension_tuple: Tuple[Tuple[float, float], Tuple[float, float]]):
+        (l, d), (r, u) = dimension_tuple
+        return (l, r), (d, u)
+        if self.direction == 0:
+            pass
+        elif self.direction == 1:
+            # Mirror horizontally
+            return (-r, -l), (d, u)
+        elif self.direction == 2:
+            # Rotate 90 degree clockwise
+            return (d, u), (-r, -l)
+        elif self.direction == 3:
+            # Mirror then rotate 90 clockwise
+            return (d, u), (l, r)
+        elif self.direction == 4:
+            # Rotate 180 clockwise
+            return (-r, -l), (-u, -d)
+        elif self.direction == 5:
+            # Mirror then rotate 180 clockwise
+            return (l, r), (-u, -d)
+        elif self.direction == 6:
+            # Rotate 270 clockwise
+            return (-u, -d), (l, r)
+        elif self.direction == 7:
+            # Mirror then rotate 270 clockwise
+            return (-u, -d), (-r, -l)
+
     @cached_property
     def bounding_box(self) -> np.ndarray:
-        if self.direction % 2 == 0:
-            # 90 degree turns
-            (l, r), (d, u) = self.half_width, self.half_height
+        (l, r), (d, u) = self.half_width, self.half_height
 
-            if self.direction % 4 != 0:
-                (l, r), (d, u) = (d, u), (l, r)
+        min_x = int(Entity._round_corrected(self.position.x + l))
+        max_x = int(Entity._round_corrected(self.position.x + r))
+        min_y = int(Entity._round_corrected(self.position.y + d))
+        max_y = int(Entity._round_corrected(self.position.y + u))
 
-            min_x = int(Entity._round_corrected(self.position.x + l))
-            max_x = int(Entity._round_corrected(self.position.x + r))
-            min_y = int(Entity._round_corrected(self.position.y + d))
-            max_y = int(Entity._round_corrected(self.position.y + u))
+        return self._get_corners(max_x, max_y, min_x, min_y)
 
-            corners = np.array([[min_x, min_x, max_x, max_x], [min_y, max_y, min_y, max_y]])
 
-            return corners.T
-
-        else:
-            # 45 degree turns
-            raise NotImplementedError("45 degree turns not supported yet")
-            # degrees = self.direction * 45
-            # theta = np.deg2rad(360 - degrees)
-            # return utils.math.rotate(np.array([self.position.x, self.position.y]), corners, theta).T
+    @staticmethod
+    def _get_corners(max_x, max_y, min_x, min_y):
+        return np.array([[min_x, min_y],
+                         [min_x, max_y],
+                         [max_x, min_y],
+                         [max_x, max_y]])
 
     @staticmethod
     def _round_to_corrected_halve(value: float):
@@ -184,16 +210,116 @@ class Entity:
         width = round((self.half_width[1] - self.half_width[0]) * 2) / 2
         height = round((self.half_height[1] - self.half_height[0]) * 2) / 2
 
+        if width % 2 == 0:
+            self.position.x = self._round_corrected(self.position.x)
+        else:
+            self.position.x = self._round_to_corrected_halve(self.position.x)
+
+        if height % 2 == 0:
+            self.position.y = self._round_corrected(self.position.y)
+        else:
+            self.position.y = self._round_to_corrected_halve(self.position.y)
+
+    def get_collision_mask(self):
+        width = int(round((self.half_width[1] - self.half_width[0]) * 2) / 2)
+        height = int(round((self.half_height[1] - self.half_height[0]) * 2) / 2)
+
         if self.direction == 2 or self.direction == 6:
             # direction = rotated 90 or 270 degrees
             width, height = height, width
 
-        if width % 2 == 0:
-            self.position.x = Entity._round_corrected(self.position.x)
-        else:
-            self.position.x = Entity._round_to_corrected_halve(self.position.x)
+        return np.ones((height, width), dtype=bool)
 
-        if height % 2 == 0:
-            self.position.y = Entity._round_corrected(self.position.y)
-        else:
-            self.position.y = Entity._round_to_corrected_halve(self.position.y)
+
+class CurvedRailEntity(Entity):
+    dict_type: Type[TypedDict] = EntityDict
+
+    def __init__(self,
+                 entity_number: int,
+                 name: str,
+                 position: PositionDict,
+                 direction: int = None,
+                 orientation: float = None,
+                 connections: ConnectionDict = None,
+                 control_behavior: object = None,
+                 items: object = None,
+                 recipe: str = None,
+                 bar: int = None,
+                 inventory: InventoryDict = None,
+                 infinity_settings: InfinitySettingsDict = None,
+                 type: str = None,
+                 input_priority: str = None,
+                 output_priority: str = None,
+                 filter: str = None,
+                 filters: List[ItemFilterDict] = (),
+                 filter_mode: str = None,
+                 override_stack_size: int = None,
+                 drop_position: PositionDict = None,
+                 pickup_position: PositionDict = None,
+                 request_filters: List[LogisticFilterDict] = (),
+                 request_from_buffers: bool = None,
+                 parameters: SpeakerParameterDict = None,
+                 alert_parameters: SpeakerAlertParameterDict = None,
+                 auto_launch: bool = None,
+                 variation: object = None,
+                 color: ColorDict = None,
+                 station: str = None
+                 ):
+        if name != "curved-rail":
+            raise Exception("CurvedRailEntity can only be created for curved-rail")
+        super().__init__(entity_number, name, position, direction, orientation, connections, control_behavior, items,
+                         recipe, bar, inventory, infinity_settings, type, input_priority, output_priority, filter,
+                         filters, filter_mode, override_stack_size, drop_position, pickup_position, request_filters,
+                         request_from_buffers, parameters,alert_parameters, auto_launch, variation, color, station)
+
+        (l, r), (d, u) = (-4.5, 0.5), (-4.5, 2.5)
+        w, h = self._orientate_half_dimensions(((l, d), (r, u)))
+        self.half_width = w
+        self.half_height = h
+
+    def get_collision_mask(self):
+        mask = np.array([[True, True, False, False, False],
+                         [False, True, True, False, False],
+                         [False, False, True, True, False],
+                         [False, False, True, True, True],
+                         [False, False, False, True, True],
+                         [False, False, False, True, True],
+                         [False, False, False, True, True]], dtype=bool)
+        if self.direction == 0:
+            return mask
+        elif self.direction == 1:
+            # Mirror horizontally
+            return np.flip(mask, axis=1)
+        elif self.direction == 2:
+            # Rotate 90 degree clockwise
+            return np.rot90(mask, k=3)
+        elif self.direction == 3:
+            # Mirror then rotate 90 clockwise
+            return np.rot90(np.flip(mask, axis=1), k=3)
+        elif self.direction == 4:
+            # Rotate 180 clockwise
+            return np.rot90(mask, k=2)
+        elif self.direction == 5:
+            # Mirror then rotate 180 clockwise
+            return np.flip(mask, axis=0)
+        elif self.direction == 6:
+            # Rotate 270 clockwise
+            return np.rot90(mask)
+        elif self.direction == 7:
+            # Mirror then rotate 270 clockwise
+            return np.rot90(np.flip(mask, axis=1))
+
+    # @cached_property
+    # def bounding_box(self) -> np.ndarray:
+    #     if self.direction in [2, 3, 6, 7]:
+    #         self.half_width, self.half_height = self.half_height, self.half_width
+    #     (l, r), (d, u) = self.half_width, self.half_height
+    #
+    #     min_x = int(Entity._round_corrected(self.position.x + l))
+    #     max_x = int(Entity._round_corrected(self.position.x + r))
+    #     min_y = int(Entity._round_corrected(self.position.y + d))
+    #     max_y = int(Entity._round_corrected(self.position.y + u))
+    #
+    #     return self._get_corners(max_x, max_y, min_x, min_y)
+
+

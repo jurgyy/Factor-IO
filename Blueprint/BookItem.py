@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
+from typing_extensions import TypedDict
 
 from Blueprint.BaseBlueprintItem import BaseBlueprintItem, BaseBlueprintItemDict
 from Blueprint.DeconstructionPlanner import DeconstructionPlanner
@@ -16,6 +17,8 @@ class BookItemDict(BaseBlueprintItemDict):
 
 
 class BookItem(BaseBlueprintItem):
+    dict_type: Type[TypedDict] = BookItemDict
+
     def __init__(self,
                  index: int,
                  blueprint: BlueprintDict = None,

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import abc
 from typing import TYPE_CHECKING, Type, Union
 
 from typing_extensions import TypedDict
+
+from Blueprint.FactorioBlueprintObject import FactorioBlueprintObject
 
 # Type checking import to prevent import errors
 if TYPE_CHECKING:
@@ -15,11 +18,13 @@ from cachedProperty import cached_property
 
 
 class BaseBlueprintItemDict(TypedDict):
-    type: Type
-    item: Union[BlueprintBookDict, BlueprintDict, UpgradePlannerDict, DeconstructionPlannerDict]
+    blueprint: BlueprintDict
+    blueprint_book: BlueprintBookDict
+    upgrade_planner: UpgradePlannerDict
+    deconstruction_planner: DeconstructionPlannerDict
 
 
-class BaseBlueprintItem:
+class BaseBlueprintItem(FactorioBlueprintObject, metaclass=abc.ABCMeta):
     def __init__(self,
                  blueprint: BlueprintDict = None,
                  blueprint_book: BlueprintBookDict = None,
@@ -30,45 +35,30 @@ class BaseBlueprintItem:
         from Blueprint.BlueprintBook import BlueprintBookDict, BlueprintBook
         from Blueprint.Blueprint import BlueprintDict, Blueprint
 
-        if blueprint is not None and blueprint_book is not None:
-            print(blueprint_book, blueprint)
-            raise Exception("either blueprint xor blueprintBook must be None")
+        self.blueprint_book: BlueprintBook = None if blueprint_book is None else BlueprintBook(**blueprint_book)
+        self.blueprint: Blueprint = None if blueprint is None else Blueprint(**blueprint)
 
-        self.type: Type = next(
-            (t for e, t in [(blueprint, Blueprint), (blueprint_book, BlueprintBook)] if e is not None), None)
-        self.item: Union[BlueprintBookDict, BlueprintDict, None] = None
-
-        if blueprint_book is not None:
-            self.item = BlueprintBook(**blueprint_book)
-        elif blueprint is not None:
-            self.item = Blueprint(**blueprint)
-
-    def __iter__(self):
-        if self.type is Blueprint:
-            yield self.item
-            return
-        elif self.type is BlueprintBook:
-            for bp in self.item:
+    def iter_items(self):
+        if self.blueprint is not None:
+            yield self.blueprint
+        if self.blueprint_book is not None:
+            for bp in self.blueprint_book:
                 yield bp
 
     def __repr__(self):
-        return f"{self.type.__name__} of length {len(self)}"
+        return f"Blueprint item of length {len(self)}"
 
     @cached_property
     def _calc_length(self):
         count = 0
-        for _ in self:
+        for _ in self.iter_items():
             count += 1
         return count
 
     def __len__(self):
         return self._calc_length
 
-    def iterEntities(self):
-        if self.type is BlueprintBook:
-            for bp in self.item:
-                for e in bp.entities:
-                    yield e
-        if self.type is Blueprint:
-            for e in self.item.entities:
+    def iter_entities(self):
+        for bp in self.iter_items():
+            for e in bp.entities:
                 yield e

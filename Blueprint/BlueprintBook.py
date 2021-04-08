@@ -36,5 +36,5 @@ class BlueprintBook:
 
     def __iter__(self):
         for bpi in self.blueprints:
-            for bp in bpi:
+            for bp in bpi.iter_items():
                 yield bp

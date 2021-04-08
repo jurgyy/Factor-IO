@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import numpy as np
-from matplotlib.path import Path
 
+from Blueprint.FactorioBlueprintObject import FactorioBlueprintObject
 from cachedProperty import cached_property
-from typing import List
+from typing import List, Tuple, Type
 
 from typing_extensions import TypedDict
 
 from Blueprint.Color import Color, ColorDict
-from Blueprint.Entity import Entity, EntityDict
+from Blueprint.Entity import Entity, EntityDict, CurvedRailEntity
 from Blueprint.Icon import Icon, IconDict
 from Blueprint.Position import Position
 from Blueprint.Schedule import Schedule, ScheduleDict
@@ -27,7 +27,9 @@ class BlueprintDict(TypedDict):
     schedules: List[ScheduleDict]
 
 
-class Blueprint:
+class Blueprint(FactorioBlueprintObject):
+    dict_type: Type[TypedDict] = BlueprintDict
+
     def __init__(self,
                  entities: List[EntityDict] = (),
                  item: str = None,
@@ -41,7 +43,7 @@ class Blueprint:
                  ):
         self.item: str = item
         self.label: str = label
-        self.entities: List[Entity] = [Entity(**e) for e in entities]
+        self.entities: List[Entity] = [Blueprint._create_entity(e) for e in entities]
         self.tiles: List[Tile] = [Tile(**t) for t in tiles]
         self.icons: List[Icon] = [Icon(**i) for i in icons]
         self.schedules: List[Schedule] = [Schedule(**s) for s in schedules]
@@ -73,25 +75,14 @@ class Blueprint:
 
         return Position(min_x, min_y), Position(max_x, max_y)
 
-    def get_dimensions(self):
+    def get_dimensions(self) -> Tuple[int, int]:
         bb = self.bounding_box
         x = bb[1].x - bb[0].x
         y = bb[1].y - bb[0].y
-        return x, y
+        return int(x), int(y)
 
-    def get_entity_at(self, x, y):
-        if not self.bounding_box[0].x <= x <= self.bounding_box[1].x or \
-               self.bounding_box[0].y <= y <= self.bounding_box[1].y:
-            return None
-
-        for e in self.entities:
-            bb = e.bounding_box
-
-        return None
-
-            if e.position.y < minY:
-                minY = e.position.y
-            if e.position.y > maxY:
-                maxY = e.position.y
-
-        return (Position(minX, minY), Position(maxX, maxY))
+    @staticmethod
+    def _create_entity(entity_dict: EntityDict):
+        if entity_dict["name"] == "curved-rail":
+            return CurvedRailEntity(**entity_dict)
+        return Entity(**entity_dict)

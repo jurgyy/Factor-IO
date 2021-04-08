@@ -1,4 +1,8 @@
+from typing import Type
+
 from typing_extensions import TypedDict
+
+from Blueprint.FactorioBlueprintObject import FactorioBlueprintObject
 
 
 class ColorDict(TypedDict):
@@ -8,7 +12,9 @@ class ColorDict(TypedDict):
     a: float
 
 
-class Color:
+class Color(FactorioBlueprintObject):
+    dict_type: Type[TypedDict] = ColorDict
+
     def __init__(self, r: float, g: float, b: float, a: float):
         self.r: float = r
         self.g: float = g

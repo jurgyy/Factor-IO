@@ -17,6 +17,8 @@ class BlueprintWrapperDict(BaseBlueprintItemDict):
 
 
 class BlueprintWrapper(BaseBlueprintItem):
+    dict_type: Type[TypedDict] = BlueprintWrapperDict
+
     def __init__(self,
                  blueprint: BlueprintDict = None,
                  blueprint_book: BlueprintBookDict = None,
