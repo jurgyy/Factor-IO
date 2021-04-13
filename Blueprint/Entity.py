@@ -50,6 +50,7 @@ class EntityDict(TypedDict):
     variation: object
     color: ColorDict
     station: str
+    neighbours: List[int]
 
 
 class Entity(FactorioBlueprintObject):
@@ -94,6 +95,7 @@ class Entity(FactorioBlueprintObject):
                  variation: object = None,
                  color: ColorDict = None,
                  station: str = None,
+                 neighbours: List[int] = ()
                  ):
         self.entity_number: int = entity_number
         self.name: str = name
@@ -124,6 +126,7 @@ class Entity(FactorioBlueprintObject):
         self.variation: object = variation
         self.color: Color = None if color is None else Color(**color)
         self.station: str = station
+        self.neighbours: List[int] = list(neighbours)
 
         if self.direction > 7:
             raise Exception("Invalid direction")
