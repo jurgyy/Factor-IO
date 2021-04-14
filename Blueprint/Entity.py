@@ -51,6 +51,7 @@ class EntityDict(TypedDict):
     color: ColorDict
     station: str
     neighbours: List[int]
+    buffer_size: int
 
 
 class Entity(FactorioBlueprintObject):
@@ -95,7 +96,8 @@ class Entity(FactorioBlueprintObject):
                  variation: object = None,
                  color: ColorDict = None,
                  station: str = None,
-                 neighbours: List[int] = ()
+                 neighbours: List[int] = (),
+                 buffer_size: int = None
                  ):
         self.entity_number: int = entity_number
         self.name: str = name
@@ -127,6 +129,7 @@ class Entity(FactorioBlueprintObject):
         self.color: Color = None if color is None else Color(**color)
         self.station: str = station
         self.neighbours: List[int] = list(neighbours)
+        self.buffer_size: int = buffer_size
 
         if self.direction > 7:
             raise Exception("Invalid direction")
@@ -141,33 +144,29 @@ class Entity(FactorioBlueprintObject):
 
     def _orientate_half_dimensions(self, dimension_tuple: Tuple[Tuple[float, float], Tuple[float, float]]):
         (l, d), (r, u) = dimension_tuple
-        return (l, r), (d, u)
-        if self.direction == 0:
-            pass
-        elif self.direction == 1:
-            # Mirror horizontally
+        if self.direction == 0 or self.direction == 5:
+            # 0: Upright
+            # 5: Mirror then rotate 180 clockwise
+            return (l, r), (d, u)
+        elif self.direction == 1 or self.direction == 4:
+            # 1: Mirror horizontally
+            # 4: Rotate 180 clockwise
             return (-r, -l), (d, u)
-        elif self.direction == 2:
-            # Rotate 90 degree clockwise
-            return (d, u), (-r, -l)
-        elif self.direction == 3:
-            # Mirror then rotate 90 clockwise
+        elif self.direction == 2 or self.direction == 7:
+            # 2: Rotate 90 degree clockwise
+            # 7: Mirror then rotate 270 clockwise
             return (d, u), (l, r)
-        elif self.direction == 4:
-            # Rotate 180 clockwise
-            return (-r, -l), (-u, -d)
-        elif self.direction == 5:
-            # Mirror then rotate 180 clockwise
-            return (l, r), (-u, -d)
-        elif self.direction == 6:
-            # Rotate 270 clockwise
-            return (-u, -d), (l, r)
-        elif self.direction == 7:
-            # Mirror then rotate 270 clockwise
+        else:
+            # 3: Mirror then rotate 90 clockwise
+            # 6: Rotate 270 clockwise
             return (-u, -d), (-r, -l)
 
     @cached_property
     def bounding_box(self) -> np.ndarray:
+        """
+        Returns 4 tuples in the order of bottom left, top left, bottom right, top right.
+        In Factorio the y-axis increases when going down so the bottom row has the max_y value.
+        """
         (l, r), (d, u) = self.half_width, self.half_height
 
         min_x = int(Entity._round_corrected(self.position.x + l))
@@ -177,13 +176,12 @@ class Entity(FactorioBlueprintObject):
 
         return self._get_corners(max_x, max_y, min_x, min_y)
 
-
     @staticmethod
     def _get_corners(max_x, max_y, min_x, min_y):
-        return np.array([[min_x, min_y],
-                         [min_x, max_y],
-                         [max_x, min_y],
-                         [max_x, max_y]])
+        return np.array([[min_x, max_y],
+                         [min_x, min_y],
+                         [max_x, max_y],
+                         [max_x, min_y]])
 
     @staticmethod
     def _round_to_corrected_halve(value: float):
@@ -210,8 +208,8 @@ class Entity(FactorioBlueprintObject):
             4x4 = (2,     2)
             9x9 = (4.5, 4.5)
         """
-        width = round((self.half_width[1] - self.half_width[0]) * 2) / 2
-        height = round((self.half_height[1] - self.half_height[0]) * 2) / 2
+        width = round(self.half_width[1] - self.half_width[0])
+        height = round(self.half_height[1] - self.half_height[0])
 
         if width % 2 == 0:
             self.position.x = self._round_corrected(self.position.x)
@@ -273,17 +271,19 @@ class CurvedRailEntity(Entity):
         super().__init__(entity_number, name, position, direction, orientation, connections, control_behavior, items,
                          recipe, bar, inventory, infinity_settings, type, input_priority, output_priority, filter,
                          filters, filter_mode, override_stack_size, drop_position, pickup_position, request_filters,
-                         request_from_buffers, parameters,alert_parameters, auto_launch, variation, color, station)
+                         request_from_buffers, parameters, alert_parameters, auto_launch, variation, color, station)
 
         (l, r), (d, u) = (-4.5, 0.5), (-4.5, 2.5)
+        (l, r), (d, u) = (-3, 2), (-4, 4)
         w, h = self._orientate_half_dimensions(((l, d), (r, u)))
         self.half_width = w
         self.half_height = h
 
     def get_collision_mask(self):
-        mask = np.array([[True, True, False, False, False],
-                         [False, True, True, False, False],
-                         [False, False, True, True, False],
+        mask = np.array([[False, True, False, False, False],
+                         [True, True, True, False, False],
+                         [False, True, True, True, False],
+                         [False, True, True, True, False],
                          [False, False, True, True, True],
                          [False, False, False, True, True],
                          [False, False, False, True, True],
@@ -311,6 +311,11 @@ class CurvedRailEntity(Entity):
         elif self.direction == 7:
             # Mirror then rotate 270 clockwise
             return np.rot90(np.flip(mask, axis=1))
+
+    def _correct_position(self):
+        # Curved Rails are always centered at rounded values.
+        self.position.x = self._round_corrected(self.position.x)
+        self.position.y = self._round_corrected(self.position.y)
 
     # @cached_property
     # def bounding_box(self) -> np.ndarray:
