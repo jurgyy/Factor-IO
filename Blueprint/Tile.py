@@ -15,8 +15,9 @@ class Tile(FactorioBlueprintObject):
     dict_type: Type[TypedDict] = TileDict
 
     def __init__(self, name: str, position: PositionDict):
-        self.name = name
-        self.Position = Position(**position)
+        pass
+        # self.name = name
+        # self.Position = Position(**position)
 
-    def __repr__(self):
-        return f"[Tile {self.name}@{self.Position}]"
+    # def __repr__(self):
+    #     return f"[Tile {self.name}@{self.Position}]"
