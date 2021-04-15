@@ -52,6 +52,11 @@ class EntityDict(TypedDict):
     station: str
     neighbours: List[int]
     buffer_size: int
+    power_production: int
+    power_usage: int
+    switch_state: bool
+    manual_trains_limit: int
+    signal: object  # Found in -LY2k2uaRpsSKNDlffKk, not sure what type it is.
 
 
 class Entity(FactorioBlueprintObject):
@@ -97,7 +102,12 @@ class Entity(FactorioBlueprintObject):
                  color: ColorDict = None,
                  station: str = None,
                  neighbours: List[int] = (),
-                 buffer_size: int = None
+                 buffer_size: int = None,
+                 power_production: int = None,
+                 power_usage: int = None,
+                 switch_state: bool = None,
+                 manual_trains_limit: int = None,
+                 signal: object = None
                  ):
         self.entity_number: int = entity_number
         self.name: str = name
@@ -130,6 +140,11 @@ class Entity(FactorioBlueprintObject):
         self.station: str = station
         self.neighbours: List[int] = list(neighbours)
         self.buffer_size: int = buffer_size
+        self.power_production: int = power_production
+        self. power_usage: int = power_usage
+        self.switch_state: bool = switch_state
+        self.manual_trains_limit: int = manual_trains_limit
+        self.signal: object = signal
 
         if self.direction > 7:
             raise Exception("Invalid direction")
