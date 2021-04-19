@@ -78,8 +78,8 @@ class Blueprint(FactorioBlueprintObject):
         min_y, max_y = float('inf'), float('-inf')
 
         for e in self.entities:
-            e_min_x, e_min_y = np.min(e.bounding_box, axis=0)
-            e_max_x, e_max_y = np.max(e.bounding_box, axis=0)
+            e_min_x, e_min_y = e.bounding_box[1]  # Top Left
+            e_max_x, e_max_y = e.bounding_box[2]  # Bottom Right
 
             if e_min_x < min_x:
                 min_x = e_min_x
