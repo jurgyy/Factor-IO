@@ -1,15 +1,12 @@
 from __future__ import annotations
 
-from typing import Type, Union
+from typing import Type
 
 from typing_extensions import TypedDict
 
 from Blueprint.BaseBlueprintItem import BaseBlueprintItemDict, BaseBlueprintItem
-from Blueprint.Blueprint import Blueprint, BlueprintDict
-from Blueprint.BlueprintBook import BlueprintBook, BlueprintBookDict
-from Blueprint.DeconstructionPlanner import DeconstructionPlannerDict
-from Blueprint.UpgradePlanner import UpgradePlannerDict
-from cachedProperty import cached_property
+from Blueprint.Blueprint import BlueprintDict
+from Blueprint.BlueprintBook import BlueprintBookDict
 
 
 class BlueprintWrapperDict(BaseBlueprintItemDict):
