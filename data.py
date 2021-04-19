@@ -87,6 +87,15 @@ def store_blueprints(factorioprints_data: dict, max_blueprint_size=1000000):
             print(f"Failed to store blueprint for key {k}.")
 
 
+def load_blueprints(key: str) -> dict:
+    fpath = path.join(Config.BlueprintsDir, f"{key}.json")
+    if path.isfile(fpath):
+        with open(fpath) as f:
+            data: dict = json.load(f)
+            return data
+    raise FileNotFoundError()
+
+
 def iter_stored_blueprints() -> Generator[Tuple[str, dict], None, None]:
     for bp_path in glob.glob(path.join(Config.BlueprintsDir, "*.json")):
         base = path.basename(bp_path)
