@@ -40,9 +40,12 @@ class BaseBlueprintItem(FactorioBlueprintObject, metaclass=abc.ABCMeta):
 
     def iter_items(self):
         if self.blueprint is not None:
-            yield self.blueprint
+            if len(self.blueprint.entities) != 0:
+                yield self.blueprint
         if self.blueprint_book is not None:
-            for bp in self.blueprint_book:
+            for bp in self.blueprint_book.iter_blueprints():
+                if len(bp.entities) == 0:
+                    continue
                 yield bp
 
     def __repr__(self):
