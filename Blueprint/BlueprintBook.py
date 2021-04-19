@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Type
 
 from typing_extensions import TypedDict
 
 from Blueprint.BookItem import BookItemDict, BookItem
 from Blueprint.Color import Color, ColorDict
+from Blueprint.FactorioBlueprintObject import FactorioBlueprintObject
+from Blueprint.Icon import IconDict, Icon
 
 
 class BlueprintBookDict(TypedDict):
@@ -15,9 +17,13 @@ class BlueprintBookDict(TypedDict):
     active_index: int
     version: int
     label_color: Color
+    description: str
+    icons: List[IconDict]
 
 
-class BlueprintBook:
+class BlueprintBook(FactorioBlueprintObject):
+    dict_type: Type[TypedDict] = BlueprintBookDict
+
     def __init__(self,
                  item: str,
                  blueprints: List[BookItemDict],
@@ -25,6 +31,8 @@ class BlueprintBook:
                  version: int = None,
                  label: str = None,
                  label_color: ColorDict = None,
+                 description: str = None,
+                 icons: List[IconDict] = (),
                  *args, **kwargs
                  ):
         self.item: str = item
@@ -33,6 +41,8 @@ class BlueprintBook:
         self.active_index: int = active_index
         self.version: int = version
         self.label_color: Color = None if label_color is None else Color(**label_color)
+        self.description: str = description
+        self.icons: List[Icon] = [Icon(**i) for i in icons]
 
     def iter_blueprints(self):
         for bpi in self.blueprints:
