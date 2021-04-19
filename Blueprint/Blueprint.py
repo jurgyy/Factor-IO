@@ -68,6 +68,9 @@ class Blueprint(FactorioBlueprintObject):
             self.absolute_snapping = kwargs["absolute-snapping"]
             del kwargs["absolute-snapping"]
 
+        if len(kwargs) > 0:
+            print(f"Unknown kwargs in {self.__class__.__name__}: {kwargs}")
+
     def __repr__(self):
         x, y = self.get_dimensions()
         return f"Blueprint of shape ({x} x {y})"

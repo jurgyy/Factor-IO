@@ -106,7 +106,8 @@ class Entity(FactorioBlueprintObject):
                  power_usage: int = None,
                  switch_state: bool = None,
                  manual_trains_limit: int = None,
-                 signal: object = None
+                 signal: object = None,
+                 *args, **kwargs
                  ):
         if name not in self.get_entity_size_dict():
             raise UnknownEntityException(name)
@@ -153,6 +154,9 @@ class Entity(FactorioBlueprintObject):
 
         self._init_dimensions()
         self._correct_position()
+
+        if len(kwargs) > 0:
+            print(f"Unknown kwargs in {self.__class__.__name__}: {kwargs}")
 
     def __repr__(self):
         return f"[Entity {self.name}@{self.position} D={self.direction}]"

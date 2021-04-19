@@ -22,3 +22,6 @@ class BlueprintWrapper(BaseBlueprintItem):
                  *args, **kwargs
                  ):
         super().__init__(blueprint, blueprint_book)
+
+        if len(kwargs) > 0:
+            print(f"Unknown kwargs in {self.__class__.__name__}: {kwargs}")

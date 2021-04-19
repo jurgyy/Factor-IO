@@ -44,6 +44,9 @@ class BlueprintBook(FactorioBlueprintObject):
         self.description: str = description
         self.icons: List[Icon] = [Icon(**i) for i in icons]
 
+        if len(kwargs) > 0:
+            print(f"Unknown kwargs in {self.__class__.__name__}: {kwargs}")
+
     def iter_blueprints(self):
         for bpi in self.blueprints:
             for bp in bpi.iter_items():
