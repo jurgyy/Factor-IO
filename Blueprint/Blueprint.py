@@ -25,6 +25,7 @@ BlueprintDict = TypedDict("BlueprintDict", {
     "schedules": List[ScheduleDict],
     "description": str,
     "snap-to-grid": PositionDict,
+    "position-relative-to-grid": PositionDict,
     "absolute-snapping": bool,
 })
 
@@ -33,6 +34,7 @@ class Blueprint(FactorioBlueprintObject):
     dict_type: Type[TypedDict] = BlueprintDict
     field_translation_map = {
         "snap_to_grid": "snap-to-grid",
+        "position_relative_to_grid": "position-relative-to-grid",
         "absolute_snapping": "absolute-snapping",
     }
 
@@ -62,6 +64,11 @@ class Blueprint(FactorioBlueprintObject):
         if "snap-to-grid" in kwargs:
             self.snap_to_grid = Position(**kwargs["snap-to-grid"])
             del kwargs["snap-to-grid"]
+
+        self.position_relative_to_grid: Position
+        if "position-relative-to-grid" in kwargs:
+            self.position_relative_to_grid = Position(**kwargs["position-relative-to-grid"])
+            del kwargs["position-relative-to-grid"]
 
         self.absolute_snapping: bool
         if "absolute-snapping" in kwargs:
