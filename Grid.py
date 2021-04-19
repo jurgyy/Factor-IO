@@ -12,8 +12,7 @@ class Grid:
         self.blueprint = blueprint
         low, high = blueprint.bounding_box
 
-        self.width: int = int(np.ceil(high.x) - np.floor(low.x))
-        self.height: int = int(np.ceil(high.y) - np.floor(low.y))
+        self.width, self.height = blueprint.get_dimensions()
 
         self.x_offset = np.floor(low.x)
         self.y_offset = np.floor(low.y)
@@ -27,12 +26,19 @@ class Grid:
             self.add_entity(e)
 
     def add_entity(self, entity: Entity):
-        bl, tl, br, tr = entity.bounding_box
+        mask = entity.get_collision_mask()
 
-        self.grid[(self._xd >= bl[0]) &
-                  (self._xd < tr[0]) &
-                  (self._yd >= bl[1]) &
-                  (self._yd < tr[1])] = entity
+        bl, tl, br, tr = entity.bounding_box
+        x_offset = int(tl[0] - self.x_offset)
+        y_offset = int(tl[1] - self.y_offset)
+
+        if np.all(mask):
+            self.grid[y_offset: y_offset + mask.shape[0],
+                      x_offset: x_offset + mask.shape[1]] = entity
+        else:
+            obj_mask = np.ma.masked_where(~mask, np.full(mask.shape, entity, dtype=Entity))
+            self.grid[y_offset: y_offset + mask.shape[0],
+                      x_offset: x_offset + mask.shape[1]][~obj_mask.mask] = np.ma.compressed(obj_mask)
 
     def __repr__(self):
         lines = []
