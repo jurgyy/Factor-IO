@@ -24,8 +24,8 @@ class BookItem(BaseBlueprintItem):
                  index: int,
                  blueprint: BlueprintDict = None,
                  blueprint_book: BlueprintBookDict = None,
+                 upgrade_planner: UpgradePlanner = None,
                  deconstruction_planner: DeconstructionPlanner = None,
-                 upgrade_planner: UpgradePlanner = None
                  ):
-        super().__init__(blueprint, blueprint_book)
+        super().__init__(blueprint, blueprint_book, upgrade_planner, deconstruction_planner)
         self.index: int = index

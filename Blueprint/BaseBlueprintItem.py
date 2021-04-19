@@ -28,6 +28,8 @@ class BaseBlueprintItem(FactorioBlueprintObject, metaclass=abc.ABCMeta):
     def __init__(self,
                  blueprint: BlueprintDict = None,
                  blueprint_book: BlueprintBookDict = None,
+                 upgrade_planner: UpgradePlannerDict = None,
+                 deconstruction_planner: DeconstructionPlannerDict = None,
                  *args, **kwargs
                  ):
         # Delayed import to prevent import errors
