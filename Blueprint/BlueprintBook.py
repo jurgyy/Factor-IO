@@ -34,7 +34,7 @@ class BlueprintBook:
         self.version: int = version
         self.label_color: Color = None if label_color is None else Color(**label_color)
 
-    def __iter__(self):
+    def iter_blueprints(self):
         for bpi in self.blueprints:
             for bp in bpi.iter_items():
                 yield bp
