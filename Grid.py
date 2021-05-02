@@ -2,20 +2,30 @@ from typing import Tuple
 
 import numpy as np
 
+import blueprintString
 from Blueprint.Blueprint import Blueprint, BlueprintDict
+from Blueprint.BlueprintWrapper import BlueprintWrapper
 from Blueprint.Entity import Entity
 from Blueprint.Tests.test_Entity import get_entity_dict
 
 
 class Grid:
-    def __init__(self, blueprint: Blueprint):
+    def __init__(self, blueprint: Blueprint, width=None, height=None, x_offset=None, y_offset=None):
         self.blueprint = blueprint
         low, high = blueprint.bounding_box
 
-        self.width, self.height = blueprint.get_dimensions()
+        if width is None or height is None:
+            self.width, self.height = blueprint.get_dimensions()
+        else:
+            self.width = width
+            self.height = height
 
-        self.x_offset = np.floor(low.x)
-        self.y_offset = np.floor(low.y)
+        if x_offset is None or y_offset is None:
+            self.x_offset = np.floor(low.x)
+            self.y_offset = np.floor(low.y)
+        else:
+            self.x_offset = x_offset
+            self.y_offset = y_offset
 
         self.grid = np.empty(shape=(self.height, self.width), dtype=Entity)
         self._yd, self._xd = np.indices((self.height, self.width))
@@ -54,7 +64,7 @@ class Grid:
             lines.append("".join(line))
         return "\n".join(lines)
 
-    def __getitem__(self, item: Tuple[int, int]):
+    def __getitem__(self, item: Tuple[int, int]) -> Entity:
         x, y = item
         return self.grid[y][x]
 
