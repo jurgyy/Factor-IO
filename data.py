@@ -1,6 +1,8 @@
 import glob
 from os import path
 import json
+import random
+
 import pyrebase
 import requests
 from typing import Generator, Tuple
@@ -96,8 +98,13 @@ def load_blueprints(key: str) -> dict:
     raise FileNotFoundError()
 
 
-def iter_stored_blueprints() -> Generator[Tuple[str, dict], None, None]:
-    for bp_path in glob.glob(path.join(Config.BlueprintsDir, "*.json")):
+def iter_stored_blueprints(seed: int = None) -> Generator[Tuple[str, dict], None, None]:
+    paths = glob.glob(path.join(Config.BlueprintsDir, "*.json"))
+    if seed is not None:
+        random.seed = seed
+        random.shuffle(paths)
+
+    for bp_path in paths:
         base = path.basename(bp_path)
         key: str = path.splitext(base)[0]
 
